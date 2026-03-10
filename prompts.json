@@ -1,0 +1,141 @@
+{
+  "_meta": {
+    "description": "Prompt templates for Manufacturing Research Agent",
+    "note": "Edit templates here to improve search quality over time. Each template gets rendered and passed to the API search engines.",
+    "template_syntax": "Use {key} for required placeholders. Optional keys have defaults defined under 'optional_keys'.",
+    "cli_usage": "uv run main.py --template <name> --set key=value --set key=value",
+    "list_usage": "uv run main.py --list-templates"
+  },
+  "templates": {
+    "fmea": {
+      "description": "FMEA / PFMEA failure mode and effects analysis for manufacturing equipment",
+      "template": "FMEA PFMEA failure mode effects analysis {industry} {equipment} reliability risk {focus}",
+      "required_keys": ["industry", "equipment"],
+      "optional_keys": {
+        "focus": "root cause corrective action severity occurrence detection"
+      },
+      "version": 1,
+      "notes": "Tips: set equipment to a specific asset (kiln, furnace, compressor, conveyor). Increase version when you refine the template."
+    },
+    "digital_twin": {
+      "description": "Digital twin modelling and simulation for industrial assets",
+      "template": "digital twin {industry} {asset} real-time monitoring simulation {focus}",
+      "required_keys": ["industry", "asset"],
+      "optional_keys": {
+        "focus": "predictive maintenance process optimization anomaly detection"
+      },
+      "version": 1,
+      "notes": "Tips: set asset to the main process asset (blast furnace, rotary kiln, rolling mill). Focus can include physics-based or data-driven."
+    },
+    "energy_opt": {
+      "description": "Energy optimization and efficiency improvement in manufacturing",
+      "template": "energy optimization efficiency {industry} {process} consumption reduction {focus}",
+      "required_keys": ["industry", "process"],
+      "optional_keys": {
+        "focus": "machine learning data-driven model decarbonization ESG"
+      },
+      "version": 1,
+      "notes": "Tips: set process to the specific energy-intensive step (pyrolysis, electrolysis, drying, compression)."
+    },
+    "production_opt": {
+      "description": "Production scheduling, throughput and yield optimisation",
+      "template": "production optimization throughput yield {industry} scheduling {focus}",
+      "required_keys": ["industry"],
+      "optional_keys": {
+        "focus": "reinforcement learning simulation operational efficiency bottleneck"
+      },
+      "version": 1,
+      "notes": "Tips: add a process name for narrower results, e.g. --set industry='steel hot rolling'."
+    },
+    "esg": {
+      "description": "ESG goals, sustainability and carbon footprint in heavy industry",
+      "template": "ESG sustainability carbon emissions {industry} net zero decarbonisation {focus}",
+      "required_keys": ["industry"],
+      "optional_keys": {
+        "focus": "energy efficiency renewable waste reduction life cycle assessment"
+      },
+      "version": 1,
+      "notes": "Tips: add regulatory or reporting framework terms (GHG protocol, Scope 3, GRI) for compliance-focused articles."
+    },
+    "root_cause": {
+      "description": "Root cause analysis and fault diagnosis in manufacturing",
+      "template": "root cause analysis fault diagnosis {industry} {failure_mode} investigation {focus}",
+      "required_keys": ["industry", "failure_mode"],
+      "optional_keys": {
+        "focus": "machine learning sensor data FMEA fishbone Ishikawa corrective action"
+      },
+      "version": 1,
+      "notes": "Tips: set failure_mode to what went wrong (bearing failure, coating defect, pressure drop, quality deviation)."
+    },
+    "predictive_maint": {
+      "description": "Predictive maintenance and condition monitoring",
+      "template": "predictive maintenance condition monitoring {industry} {equipment} {focus}",
+      "required_keys": ["industry", "equipment"],
+      "optional_keys": {
+        "focus": "vibration acoustic emission thermal imaging remaining useful life prognostics"
+      },
+      "version": 1,
+      "notes": "Tips: add specific sensor type in focus for narrower results."
+    },
+    "data_driven": {
+      "description": "Data-driven and machine learning modelling for industrial processes",
+      "template": "data-driven machine learning {model_type} {industry} process modelling {focus}",
+      "required_keys": ["industry", "model_type"],
+      "optional_keys": {
+        "focus": "neural network regression time series anomaly detection feature engineering"
+      },
+      "version": 1,
+      "notes": "Tips: set model_type to a specific algorithm family (LSTM, XGBoost, random forest, autoencoder, transformer)."
+    },
+    "hybrid_model": {
+      "description": "Physics-based, physics-informed and hybrid modelling",
+      "template": "hybrid modelling physics-informed neural network {industry} {process} first principles {focus}",
+      "required_keys": ["industry", "process"],
+      "optional_keys": {
+        "focus": "PINN grey-box semi-mechanistic transfer learning domain knowledge"
+      },
+      "version": 1,
+      "notes": "Tips: physics-informed neural networks (PINN) and grey-box are high-value terms for hybrid model papers."
+    },
+    "odr": {
+      "description": "Operational data reports and actionable insights generation",
+      "template": "operational data report actionable insights {industry} {kpi} automated reporting {focus}",
+      "required_keys": ["industry", "kpi"],
+      "optional_keys": {
+        "focus": "dashboard visualization anomaly alert recommendation system prescriptive analytics"
+      },
+      "version": 1,
+      "notes": "Tips: set kpi to the metric of interest (OEE, yield, specific energy consumption, downtime)."
+    },
+    "anomaly_detect": {
+      "description": "Anomaly and outlier detection in process sensor data",
+      "template": "anomaly detection outlier {industry} sensor time series {focus}",
+      "required_keys": ["industry"],
+      "optional_keys": {
+        "focus": "autoencoder isolation forest statistical process control SPC unsupervised"
+      },
+      "version": 1,
+      "notes": "Tips: adding the sensor type (vibration, temperature, pressure, flow) significantly improves relevance."
+    },
+    "quality_control": {
+      "description": "Quality control, defect detection and Six Sigma in manufacturing",
+      "template": "quality control defect detection {industry} {product} {focus}",
+      "required_keys": ["industry", "product"],
+      "optional_keys": {
+        "focus": "Six Sigma SPC machine vision deep learning non-destructive testing"
+      },
+      "version": 1,
+      "notes": "Tips: set product to the specific output (rebar, tyre compound, clinker, paper grade)."
+    },
+    "efficiency": {
+      "description": "Process efficiency benchmarking and improvement",
+      "template": "process efficiency improvement benchmarking {industry} OEE {focus}",
+      "required_keys": ["industry"],
+      "optional_keys": {
+        "focus": "lean manufacturing total productive maintenance waste reduction throughput"
+      },
+      "version": 1,
+      "notes": "Tips: add a specific metric (OEE, MTBF, TEEP) to target more quantitative studies."
+    }
+  }
+}

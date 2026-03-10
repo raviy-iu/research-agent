@@ -1,0 +1,48 @@
+# ── Python ──────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+
+# ── Virtual environments ─────────────────────────────────────────────────────
+.venv/
+venv/
+env/
+ENV/
+
+# ── Environment / secrets ────────────────────────────────────────────────────
+.env
+*.env.local
+
+# ── Downloaded corpus (can be large; regenerate with download.py) ────────────
+knowledge_base/
+
+# ── Search output JSONs (generated; optional to commit) ─────────────────────
+# Remove the next line if you WANT to commit your outputs/ folder
+outputs/
+
+# ── uv / pip caches ──────────────────────────────────────────────────────────
+.uv/
+.cache/
+pip-wheel-metadata/
+
+# ── IDEs ─────────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ── Testing ───────────────────────────────────────────────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ── Logs ──────────────────────────────────────────────────────────────────────
+*.log
