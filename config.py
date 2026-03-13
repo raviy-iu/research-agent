@@ -35,6 +35,40 @@ class Settings(BaseSettings):
     results_per_source: int = Field(default=25, ge=1, le=100)
     output_dir: Path = Field(default=Path("outputs"))
 
+    # ── Neo4j (local install) ──────────────────────────────────────────────
+    neo4j_uri: str = Field(
+        default="bolt://localhost:7687",
+        description="Neo4j Bolt URI",
+    )
+    neo4j_user: str = Field(default="neo4j", description="Neo4j username")
+    neo4j_password: str = Field(default="password", description="Neo4j password")
+
+    # ── Qdrant (Docker: docker compose up -d qdrant) ───────────────────────
+    qdrant_host: str = Field(default="localhost", description="Qdrant host")
+    qdrant_port: int = Field(default=6333, description="Qdrant REST port")
+    qdrant_collection: str = Field(
+        default="manufacturing_research",
+        description="Qdrant collection name for paper chunk embeddings",
+    )
+
+    # ── Knowledge-graph settings ───────────────────────────────────────────
+    embedding_model: str = Field(
+        default="all-MiniLM-L6-v2",
+        description="SentenceTransformer model name (384-dim, local/free)",
+    )
+    kg_chunk_words: int = Field(
+        default=400,
+        description="Words per text chunk before embedding",
+    )
+    kg_chunk_overlap: int = Field(
+        default=50,
+        description="Word overlap between consecutive chunks",
+    )
+    kb_dir: Path = Field(
+        default=Path("knowledge_base"),
+        description="Root directory for the local corpus (created by downloader.py)",
+    )
+
 
 # Module-level singleton – import this everywhere
 settings = Settings()

@@ -1,0 +1,32 @@
+# docker-compose.yml – Qdrant vector database for the research-agent knowledge graph.
+#
+# Usage
+# -----
+#   Start:   docker compose up -d qdrant
+#   Stop:    docker compose down
+#   Logs:    docker compose logs -f qdrant
+#   Reset:   docker compose down -v   (WARNING: deletes all stored vectors)
+#
+# Qdrant REST API: http://localhost:6333
+# Qdrant Web UI:   http://localhost:6333/dashboard
+# Qdrant gRPC:     localhost:6334
+#
+# Data is persisted to ./qdrant_data/ on the host machine.
+
+services:
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: research_agent_qdrant
+    ports:
+      - "6333:6333"   # REST API + Web UI
+      - "6334:6334"   # gRPC
+    volumes:
+      - ./qdrant_data:/qdrant/storage
+    environment:
+      - QDRANT__LOG_LEVEL=INFO
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6333/readyz"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
