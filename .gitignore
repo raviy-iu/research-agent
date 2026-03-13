@@ -26,6 +26,7 @@ knowledge_base/
 # ── Search output JSONs (generated; optional to commit) ─────────────────────
 # Remove the next line if you WANT to commit your outputs/ folder
 outputs/
+qdrant_data/
 
 # ── uv / pip caches ──────────────────────────────────────────────────────────
 .uv/

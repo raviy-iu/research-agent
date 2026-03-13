@@ -176,9 +176,9 @@ class QdrantManager:
                 ]
             )
 
-        hits = self._client.search(
+        response = self._client.query_points(
             collection_name=self._collection,
-            query_vector=query_vector,
+            query=query_vector,
             query_filter=query_filter,
             limit=top_k,
             score_threshold=score_threshold if score_threshold > 0 else None,
@@ -190,7 +190,7 @@ class QdrantManager:
                 "score": hit.score,
                 **hit.payload,
             }
-            for hit in hits
+            for hit in response.points
         ]
 
     def search_all(
@@ -207,12 +207,22 @@ class QdrantManager:
         """Return collection info (vector count, etc.)."""
         try:
             info = self._client.get_collection(self._collection)
+            # In qdrant-client >= 1.13, vectors config may be a VectorParams
+            # object (unnamed) or a dict (named vectors) - handle both.
+            vectors_config = info.config.params.vectors
+            if hasattr(vectors_config, "size"):
+                vector_size = vectors_config.size
+                distance    = str(vectors_config.distance)
+            else:
+                first = next(iter(vectors_config.values()))
+                vector_size = first.size
+                distance    = str(first.distance)
             return {
-                "collection":     self._collection,
-                "total_chunks":   info.points_count,
-                "vector_size":    info.config.params.vectors.size,
-                "distance":       str(info.config.params.vectors.distance),
-                "status":         str(info.status),
+                "collection":   self._collection,
+                "total_chunks": info.points_count,
+                "vector_size":  vector_size,
+                "distance":     distance,
+                "status":       str(info.status),
             }
         except Exception as exc:
             return {"error": str(exc)}

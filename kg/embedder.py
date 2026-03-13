@@ -1,51 +1,56 @@
 """
-kg/embedder.py – SentenceTransformer wrapper and text chunker.
+kg/embedder.py – OpenAI embedding wrapper and text chunker.
 
-Embedding model: all-MiniLM-L6-v2  (384 dims, local, free, fast)
-Chunking:        sliding window over words (default 400 words, 50-word overlap)
+Embedding model : text-embedding-3-small  (1536-dim, OpenAI API)
+Chunking        : sliding window over words (default 400 words, 50-word overlap)
 
-The model is loaded lazily on first use and cached for the process lifetime.
+Requires OPENAI_API_KEY in .env (or environment).
+
+Public API (unchanged from previous SentenceTransformer version):
+  chunk_text(text, words, overlap)  -> list[str]
+  embed_texts(texts, batch_size)    -> list[list[float]]
+  embed_query(query)                -> list[float]
+  embedding_dim()                   -> int   (1536)
 """
 from __future__ import annotations
 
 import logging
-import re
-from functools import lru_cache
 
-from sentence_transformers import SentenceTransformer
+from openai import OpenAI
 
 from config import settings
 
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
-# Model singleton
+# Embedding dimension constant
 # ---------------------------------------------------------------------------
 
-@lru_cache(maxsize=1)
-def _get_model(model_name: str) -> SentenceTransformer:
-    logger.info("Loading embedding model: %s (first call only)", model_name)
-    return SentenceTransformer(model_name)
-
-
-def get_model() -> SentenceTransformer:
-    """Return the cached SentenceTransformer model."""
-    return _get_model(settings.embedding_model)
+_EMBEDDING_DIM = 1536   # text-embedding-3-small default output dimension
 
 
 def embedding_dim() -> int:
-    """Return the output vector dimension (384 for all-MiniLM-L6-v2)."""
-    return get_model().get_sentence_embedding_dimension()
+    """Return the output vector dimension (1536 for text-embedding-3-small)."""
+    return _EMBEDDING_DIM
 
 
 # ---------------------------------------------------------------------------
-# Text chunking
+# OpenAI client (created per call - stateless, thread-safe)
 # ---------------------------------------------------------------------------
 
-def _tokenize_words(text: str) -> list[str]:
-    """Split text into whitespace-separated tokens (words)."""
-    return text.split()
+def _get_client() -> OpenAI:
+    """Return an OpenAI client using the API key from settings."""
+    if not settings.openai_api_key:
+        raise ValueError(
+            "OPENAI_API_KEY is not set. "
+            "Add it to your .env file:  OPENAI_API_KEY=sk-..."
+        )
+    return OpenAI(api_key=settings.openai_api_key)
 
+
+# ---------------------------------------------------------------------------
+# Text chunking  (no model dependency - unchanged from previous version)
+# ---------------------------------------------------------------------------
 
 def chunk_text(
     text: str,
@@ -64,15 +69,15 @@ def chunk_text(
 
     Returns
     -------
-    list[str] – At least one chunk (may be shorter than `words` for short texts).
+    list[str] - At least one chunk (may be shorter than `words` for short texts).
     """
-    words = words or settings.kg_chunk_words
+    words   = words   or settings.kg_chunk_words
     overlap = overlap or settings.kg_chunk_overlap
 
     if not text or not text.strip():
         return []
 
-    tokens = _tokenize_words(text.strip())
+    tokens = text.strip().split()
     if not tokens:
         return []
 
@@ -82,7 +87,7 @@ def chunk_text(
     chunks: list[str] = []
     step = max(1, words - overlap)
     for start in range(0, len(tokens), step):
-        chunk_tokens = tokens[start: start + words]
+        chunk_tokens = tokens[start : start + words]
         chunks.append(" ".join(chunk_tokens))
         if start + words >= len(tokens):
             break
@@ -94,33 +99,47 @@ def chunk_text(
 # Embedding
 # ---------------------------------------------------------------------------
 
-def embed_texts(texts: list[str], batch_size: int = 64) -> list[list[float]]:
+def embed_texts(texts: list[str], batch_size: int = 100) -> list[list[float]]:
     """
-    Encode a list of strings into 384-dim float vectors.
+    Encode a list of strings into 1536-dim float vectors via OpenAI API.
 
     Parameters
     ----------
     texts      : Strings to embed (titles, abstracts, chunk text, queries).
-    batch_size : How many strings to encode per GPU/CPU batch.
+    batch_size : How many strings to send per API request (max 2048 for OpenAI).
 
     Returns
     -------
-    list[list[float]] – One vector per input string.
+    list[list[float]] - One 1536-dim vector per input string.
+
+    Notes
+    -----
+    - Newlines are replaced with spaces (OpenAI recommendation).
+    - text-embedding-3-small vectors are unit-normalised by the API,
+      so cosine similarity == dot product.
     """
     if not texts:
         return []
 
-    model = get_model()
-    embeddings = model.encode(
-        texts,
-        batch_size=batch_size,
-        convert_to_numpy=True,
-        show_progress_bar=len(texts) > 20,
-        normalize_embeddings=True,   # cosine similarity via dot product after normalization
-    )
-    return [emb.tolist() for emb in embeddings]
+    client  = _get_client()
+    results: list[list[float]] = []
+
+    for i in range(0, len(texts), batch_size):
+        batch = [t.replace("\n", " ").strip() or " " for t in texts[i : i + batch_size]]
+        logger.debug(
+            "Embedding batch %d-%d of %d via %s",
+            i, i + len(batch), len(texts), settings.embedding_model,
+        )
+        response = client.embeddings.create(
+            input=batch,
+            model=settings.embedding_model,
+        )
+        # response.data is sorted by index, matching input order
+        results.extend([item.embedding for item in response.data])
+
+    return results
 
 
 def embed_query(query: str) -> list[float]:
-    """Embed a single query string. Returns a 384-dim float list."""
+    """Embed a single query string. Returns a 1536-dim float list."""
     return embed_texts([query])[0]

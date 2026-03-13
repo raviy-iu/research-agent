@@ -31,6 +31,10 @@ class Settings(BaseSettings):
     semantic_scholar_api_key: str = Field(
         default="", description="Semantic Scholar API key (raises rate limit)"
     )
+    openai_api_key: str = Field(
+        default="",
+        description="OpenAI API key for text-embedding-3-small embeddings",
+    )
 
     results_per_source: int = Field(default=25, ge=1, le=100)
     output_dir: Path = Field(default=Path("outputs"))
@@ -53,8 +57,8 @@ class Settings(BaseSettings):
 
     # ── Knowledge-graph settings ───────────────────────────────────────────
     embedding_model: str = Field(
-        default="all-MiniLM-L6-v2",
-        description="SentenceTransformer model name (384-dim, local/free)",
+        default="text-embedding-3-small",
+        description="OpenAI embedding model name (text-embedding-3-small = 1536-dim)",
     )
     kg_chunk_words: int = Field(
         default=400,
