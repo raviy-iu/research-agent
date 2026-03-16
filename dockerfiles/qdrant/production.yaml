@@ -1,0 +1,80 @@
+# dockerfiles/qdrant/production.yaml
+#
+# Qdrant server configuration – mounted read-only inside the container at
+#   /qdrant/config/production.yaml
+#
+# This file is loaded on top of Qdrant's built-in defaults, so only
+# settings that differ from defaults need to be listed here.
+#
+# Full reference:
+#   https://qdrant.tech/documentation/guides/configuration/
+#   https://github.com/qdrant/qdrant/blob/master/config/config.yaml
+#
+# Environment-variable overrides (QDRANT__SECTION__KEY=value) always
+# take the highest precedence and are set in docker-compose.yml.
+
+# ---------------------------------------------------------------------------
+# Storage
+# ---------------------------------------------------------------------------
+storage:
+  # Directory inside the container where Qdrant persists all data.
+  # Mapped to the named Docker volume `qdrant_data` via docker-compose.yml.
+  storage_path: /qdrant/storage
+
+  # Write-ahead log – keeps mutations durable across unclean shutdowns.
+  wal:
+    # Maximum WAL segment size (MiB) before Qdrant rolls to a new file.
+    wal_capacity_mb: 32
+
+  # Performance: how many HNSW graph edges to build per node at index time.
+  # Higher = better recall, more RAM and build time.
+  # 16 is a good default for cosine / dot-product searches.
+  hnsw_index:
+    m: 16
+    ef_construct: 100
+    # Full-scan threshold: if a collection has fewer vectors than this,
+    # Qdrant skips the HNSW index and does a brute-force scan instead
+    # (faster for very small collections).
+    full_scan_threshold: 10000
+
+  # Quantisation is OFF by default (requires explicit collection config).
+  # Enable scalar quantization in qdrant_manager.py when RAM becomes a
+  # constraint (trades ~1-2% recall for ~4x RAM reduction).
+
+# ---------------------------------------------------------------------------
+# Service (HTTP + gRPC)
+# ---------------------------------------------------------------------------
+service:
+  # Bind to all interfaces so Docker port mapping works.
+  host: 0.0.0.0
+  http_port: 6333
+  grpc_port: 6334
+
+  # Maximum body size for HTTP requests (bytes). 256 MiB handles large
+  # batch upserts (100 × 1536-dim float32 vectors ≈ 0.6 MiB).
+  max_request_size_mb: 256
+
+  # Maximum number of parallel workers.  Set to 2× CPU cores.
+  # 0 = auto-detect (recommended for local dev; set explicitly in prod).
+  max_workers: 0
+
+# ---------------------------------------------------------------------------
+# Cluster (single-node default – set enabled: true in UAT/PROD)
+# ---------------------------------------------------------------------------
+cluster:
+  enabled: false          # flip to true for multi-node UAT/PROD deployments
+  # p2p:
+  #   port: 6335
+  # consensus:
+  #   tick_period_ms: 100
+
+# ---------------------------------------------------------------------------
+# Telemetry  (also disabled via QDRANT__TELEMETRY_DISABLED env var in
+#             docker-compose.yml – belt-and-suspenders)
+# ---------------------------------------------------------------------------
+telemetry_disabled: true
+
+# ---------------------------------------------------------------------------
+# Logging
+# ---------------------------------------------------------------------------
+log_level: INFO   # DEBUG | INFO | WARN | ERROR

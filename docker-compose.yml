@@ -2,31 +2,49 @@
 #
 # Usage
 # -----
-#   Start:   docker compose up -d qdrant
-#   Stop:    docker compose down
-#   Logs:    docker compose logs -f qdrant
-#   Reset:   docker compose down -v   (WARNING: deletes all stored vectors)
+#   Start:        docker compose up -d qdrant
+#   Stop:         docker compose down
+#   Logs:         docker compose logs -f qdrant
+#   Reset:        docker compose down -v   (WARNING: deletes all stored vectors)
+#   Pin version:  QDRANT_VERSION=v1.17.0 docker compose up -d
 #
-# Qdrant REST API: http://localhost:6333
-# Qdrant Web UI:   http://localhost:6333/dashboard
-# Qdrant gRPC:     localhost:6334
+# Qdrant REST API + Web UI : http://localhost:6333
+# Qdrant Web UI dashboard  : http://localhost:6333/dashboard
+# Qdrant gRPC              : localhost:6334
 #
-# Data is persisted to ./qdrant_data/ on the host machine.
+# Environment variables (override in .env or shell):
+#   QDRANT_VERSION       Image tag to use          (default: v1.17.0)
+#   QDRANT_HTTP_PORT     Host-side REST/UI port    (default: 6333)
+#   QDRANT_GRPC_PORT     Host-side gRPC port       (default: 6334)
+#   QDRANT_MEMORY_LIMIT  Container memory cap      (default: 2g)
+#
+# Data is persisted in a named Docker volume: qdrant_data
+# Production config mounted read-only from ./dockerfiles/qdrant/production.yaml
 
 services:
   qdrant:
-    image: qdrant/qdrant:latest
-    container_name: research_agent_qdrant
+    image: qdrant/qdrant:${QDRANT_VERSION:-v1.17.0}
+    container_name: research-agent-qdrant
     ports:
-      - "6333:6333"   # REST API + Web UI
-      - "6334:6334"   # gRPC
+      - "${QDRANT_HTTP_PORT:-6333}:6333"   # REST API + Web UI
+      - "${QDRANT_GRPC_PORT:-6334}:6334"   # gRPC
     volumes:
-      - ./qdrant_data:/qdrant/storage
+      - qdrant_data:/qdrant/storage
+      - ./dockerfiles/qdrant/production.yaml:/qdrant/config/production.yaml:ro
     environment:
-      - QDRANT__LOG_LEVEL=INFO
+      - QDRANT__TELEMETRY_DISABLED=true
+    deploy:
+      resources:
+        limits:
+          memory: ${QDRANT_MEMORY_LIMIT:-2g}
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:6333/readyz"]
-      interval: 10s
+      test: ["CMD-SHELL", "curl -sf http://localhost:6333/healthz || exit 1"]
+      interval: 30s
       timeout: 5s
-      retries: 5
+      retries: 3
+      start_period: 10s
+
+volumes:
+  qdrant_data:
+    driver: local
