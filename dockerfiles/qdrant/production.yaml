@@ -32,10 +32,11 @@ storage:
   hnsw_index:
     m: 16
     ef_construct: 100
-    # Full-scan threshold: if a collection has fewer vectors than this,
-    # Qdrant skips the HNSW index and does a brute-force scan instead
-    # (faster for very small collections).
-    full_scan_threshold: 10000
+
+  # Full-scan threshold: if a collection has fewer vectors than this,
+  # Qdrant skips the HNSW index and does a brute-force scan instead
+  # (faster for very small collections).
+  full_scan_threshold: 10000
 
   # Quantisation is OFF by default (requires explicit collection config).
   # Enable scalar quantization in qdrant_manager.py when RAM becomes a

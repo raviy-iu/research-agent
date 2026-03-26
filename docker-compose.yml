@@ -22,6 +22,31 @@
 # Production config mounted read-only from ./dockerfiles/qdrant/production.yaml
 
 services:
+  neo4j:
+    image: neo4j:5.26-community
+    container_name: research-agent-neo4j
+    ports:
+      - "7474:7474"   # HTTP browser
+      - "7687:7687"   # Bolt
+    volumes:
+      - neo4j_data:/data
+      - neo4j_logs:/logs
+    environment:
+      - NEO4J_AUTH=${NEO4J_USER:-neo4j}/${NEO4J_PASSWORD:-password123}
+      - NEO4J_server_memory_heap_initial__size=512m
+      - NEO4J_server_memory_heap_max__size=1G
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:7474 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
   qdrant:
     image: qdrant/qdrant:${QDRANT_VERSION:-v1.17.0}
     container_name: research-agent-qdrant
@@ -39,7 +64,7 @@ services:
           memory: ${QDRANT_MEMORY_LIMIT:-2g}
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://localhost:6333/healthz || exit 1"]
+      test: ["CMD-SHELL", "timeout 3 bash -c '</dev/tcp/localhost/6333'"]
       interval: 30s
       timeout: 5s
       retries: 3
@@ -47,4 +72,8 @@ services:
 
 volumes:
   qdrant_data:
+    driver: local
+  neo4j_data:
+    driver: local
+  neo4j_logs:
     driver: local
